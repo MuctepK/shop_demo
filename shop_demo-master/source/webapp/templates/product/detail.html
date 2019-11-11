@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+    <div class="text-center">
+        <h1>{{ product.name }}</h1>
+        <div class="row">
+            <div class="col col-12 col-sm-10 col-md-8 col-lg-6 m-auto">
+                <img src="{{ product.photo.url }}" class="img-fluid" alt="{{ product.name }}">
+            </div>
+        </div>
+        <p><b>Категория:</b> {{ product.get_category_display }}</p>
+        <p><b>Цена:</b> {{ product.price }} сом</p>
+    <p><a href="{% url 'webapp:basket_change' %}?pk={{ product.pk }}&action=add&next={% url "webapp:product_detail" product.pk %}" class="btn btn-primary">В корзину</a></p>
+    </div>
+{% endblock %}

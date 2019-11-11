@@ -1,0 +1,45 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Статистика посещений </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+            <div class="row">
+                <div class="col-6">
+                    <b>Ссылка на страницу</b>
+                </div>
+                <div class="col-6">
+                    <b>Количество секунд</b>
+                </div>
+            </div>
+          <hr>
+           {% for page, seconds in request.session.stats.items %}
+               <div class="row">
+               <div class="col-6">
+               <p><a href="{{ page }}">{{ page }}</a></p>
+                   </div>
+                   <div class="col-6">
+               <p>{{ seconds }}</p>
+                   </div>
+               </div>
+               <hr>
+          {% endfor %}
+      <div class="row mt-2">
+                <div class="col-6">
+                    <b>Общее количество</b>
+                </div>
+                <div class="col-6">
+                    <b>{{request.session.total_seconds}}</b>
+                </div>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
