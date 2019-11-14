@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Товары{% endblock %}
 {% block menu %}
+    {% if perms.webapp.add_product %}
     <li class="nav-item"><a href="{% url 'webapp:product_create' %}" class="nav-link">Добавить товар</a></li>
+    {% endif %}
+    <li class="nav-item"><a href="{% url 'webapp:orders' %}" class="nav-link">Список заказов</a></li>
 {% endblock %}
 {% block content %}
     <h1 class="text-center">Товары</h1>
@@ -16,6 +19,8 @@
                         <a href="{% url "webapp:product_detail" product.pk %}"
                            class="btn btn-primary">Посмотреть</a>
                         <a href="{% url 'webapp:basket_change' %}?pk={{ product.pk }}&action=add" class="btn btn-primary mt-2">В корзину</a>
+                        <a href="{% url 'webapp:product_update' product.pk %}">Изменить</a>
+                        <a href="{% url 'webapp:product_delete' product.pk %}">Удалить</a>
                     </div>
                 </div>
             </div>

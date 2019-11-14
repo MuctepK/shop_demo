@@ -1,7 +1,11 @@
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views.generic.base import View, TemplateView
+
+from webapp.forms import ProductForm
 from webapp.models import Product, Order, OrderProduct
 from datetime import datetime, timedelta
 
@@ -49,17 +53,42 @@ class IndexView(PageTimerMixin, ListView):
     template_name = 'index.html'
     page_name = 'Главная'
 
+    def get_queryset(self):
+        return super().get_queryset().filter(in_stock=True)
+
 
 class ProductView(PageTimerMixin, DetailView):
     model = Product
     template_name = 'product/detail.html'
 
 
-class ProductCreateView(PageTimerMixin, CreateView):
+class ProductCreateView(PageTimerMixin,PermissionRequiredMixin, CreateView):
     model = Product
     template_name = 'product/create.html'
-    fields = ('name', 'category', 'price', 'photo')
+    form_class = ProductForm
     success_url = reverse_lazy('webapp:index')
+    permission_required = 'webapp.add_product'
+    permission_denied_message = 'Доступ запрещен'
+
+
+class ProductUpdateView(PageTimerMixin, UpdateView):
+    form_class = ProductForm
+    model = Product
+    template_name = 'update.html'
+    success_url = reverse_lazy('webapp:index')
+
+
+class ProductDeleteView(PageTimerMixin, DeleteView):
+    model = Product
+    template_name = 'delete.html'
+    success_url = reverse_lazy('webapp:index')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.in_stock = False
+        self.object.save()
+        success_url = self.get_success_url()
+        return HttpResponseRedirect(success_url)
 
 
 class BasketChangeView(View):
@@ -139,3 +168,14 @@ class BasketView(PageTimerMixin, CreateView):
             self.request.session.pop('products')
         if 'products_count' in self.request.session:
             self.request.session.pop('products_count')
+
+
+class OrderListView(PageTimerMixin, ListView):
+    model = Order
+    template_name = 'order/order_list.html'
+
+
+class OrderDetailView(PageTimerMixin, DetailView):
+    model = Order
+    template_name = 'order/order.html'
+    context_object_name = 'order'
