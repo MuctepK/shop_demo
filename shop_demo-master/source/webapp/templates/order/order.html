@@ -5,7 +5,16 @@
         <div class="col-6">Заказал :</div>
         <div class="col-6">{{ order.first_name }}</div>
         </div>
-        <div class="row">
+    <div class="row my-3">
+        <div class="col-6">Почта :</div>
+        <div class="col-6">{{ order.email }}</div>
+        </div>
+    <div class="row my-3">
+        <div class="col-6">Номер телефона :</div>
+        <div class="col-6">{{ order.phone }}</div>
+        </div>
+    <h2 class="text-center">Купленные товары</h2>
+        <div class="row my-3">
             <div class="col-6"><b>Название</b></div>
             <div class="col-6"><b>Количество</b></div>
         </div>
@@ -15,6 +24,7 @@
        <div class="col-6">{{ product.amount }}</div>
        </div>
     {% endfor %}
+
         <div class="row">
             <p>Заказ сделан: {{ order.created_at|date:"Y-m-d H:i:s" }}</p>
         </div>
