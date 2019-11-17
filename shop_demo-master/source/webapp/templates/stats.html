@@ -9,31 +9,45 @@
       </div>
       <div class="modal-body">
             <div class="row">
-                <div class="col-6">
+                <div class="col-4">
                     <b>Ссылка на страницу</b>
                 </div>
-                <div class="col-6">
+                <div class="col-4">
                     <b>Количество секунд</b>
+                </div>
+                <div class="col-4">
+                    <b>Количество переходов</b>
                 </div>
             </div>
           <hr>
-           {% for page, seconds in request.session.stats.items %}
+           {% for page, tuple in request.session.stats.items %}
                <div class="row">
-               <div class="col-6">
+               <div class="col-4">
                <p><a href="{{ page }}">{{ page }}</a></p>
                    </div>
-                   <div class="col-6">
-               <p>{{ seconds }}</p>
+                   <div class="col-4">
+               <p>{{ tuple.0 }}</p>
+                   </div>
+               <div class="col-4">
+               <p>{{ tuple.1 }}</p>
                    </div>
                </div>
                <hr>
           {% endfor %}
       <div class="row mt-2">
                 <div class="col-6">
-                    <b>Общее количество</b>
+                    <b>Общее количество cекунд</b>
                 </div>
                 <div class="col-6">
                     <b>{{request.session.total_seconds}}</b>
+                </div>
+            </div>
+      <div class="row mt-2">
+                <div class="col-6">
+                    <b>Общее количество переходов</b>
+                </div>
+                <div class="col-6">
+                    <b>{{request.session.total_transitions}}</b>
                 </div>
             </div>
       </div>

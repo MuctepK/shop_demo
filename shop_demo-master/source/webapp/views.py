@@ -1,12 +1,12 @@
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views.generic.base import View, TemplateView
 
-from webapp.forms import ProductForm
-from webapp.models import Product, Order, OrderProduct
+from webapp.forms import ProductForm, OrderForm, OrderProductForm
+from webapp.models import Product, Order, OrderProduct, ORDER_DELIVERED_STATUS, ORDER_NEW_STATUS, ORDER_CANCELLED_STATUS
 from datetime import datetime, timedelta
 
 
@@ -30,11 +30,15 @@ class PageTimerMixin:
     def update_stats(self, request, page, seconds):
         data = request.session.get('stats', {})
         page = page
-        page_seconds = data.get(page, 0)
-        data[page] = page_seconds + seconds
+        page_tuple = data.get(page, ())
+        page_seconds = page_tuple[0] + seconds if page_tuple else 0 + seconds
+        page_transitions = page_tuple[1] + 1 if page_tuple else 1
+        data[page] = (page_seconds, page_transitions)
 
-        total = request.session.get('total_seconds', 0)
-        request.session['total_seconds'] = total + seconds
+        total_seconds = request.session.get('total_seconds', 0)
+        total_transitions = request.session.get('total_transitions', 0)
+        request.session['total_seconds'] = total_seconds + seconds
+        request.session['total_transitions'] = total_transitions + 1
 
         request.session['stats'] = data
 
@@ -64,24 +68,32 @@ class ProductView(PageTimerMixin, DetailView):
 
 class ProductCreateView(PageTimerMixin,PermissionRequiredMixin, CreateView):
     model = Product
-    template_name = 'product/create.html'
+    template_name = 'create.html'
     form_class = ProductForm
-    success_url = reverse_lazy('webapp:index')
     permission_required = 'webapp.add_product'
     permission_denied_message = 'Доступ запрещен'
 
+    def get_success_url(self):
+        return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
 
-class ProductUpdateView(PageTimerMixin, UpdateView):
+
+class ProductUpdateView(PageTimerMixin,PermissionRequiredMixin, UpdateView):
     form_class = ProductForm
     model = Product
     template_name = 'update.html'
-    success_url = reverse_lazy('webapp:index')
+    permission_required = 'webapp.change_product'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def get_success_url(self):
+        return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
 
 
-class ProductDeleteView(PageTimerMixin, DeleteView):
+class ProductDeleteView(PageTimerMixin,PermissionRequiredMixin, DeleteView):
     model = Product
     template_name = 'delete.html'
     success_url = reverse_lazy('webapp:index')
+    permission_required = 'webapp.delete_product'
+    permission_denied_message = 'Доступ запрещен!'
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -170,12 +182,118 @@ class BasketView(PageTimerMixin, CreateView):
             self.request.session.pop('products_count')
 
 
-class OrderListView(PageTimerMixin, ListView):
+class OrderListView(PageTimerMixin, LoginRequiredMixin, ListView):
     model = Order
     template_name = 'order/order_list.html'
 
+    def get_queryset(self):
+        if self.request.user.has_perm('webapp.view_order'):
+            return Order.objects.all().order_by('-created_at')
+        else:
+            return self.request.user.orders.all()
 
-class OrderDetailView(PageTimerMixin, DetailView):
+
+class OrderCreateView(PermissionRequiredMixin, CreateView):
+    model = Order
+    fields = ('user', 'first_name', 'last_name', 'phone', 'email')
+    template_name = 'create.html'
+    permission_required = 'webapp.add_order'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def get_success_url(self):
+        return reverse('webapp:order_detail', kwargs={'pk': self.object.pk})
+
+
+class OrderDetailView(PageTimerMixin, PermissionRequiredMixin, DetailView):
     model = Order
     template_name = 'order/order.html'
     context_object_name = 'order'
+    permission_required = 'webapp.view_order'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def has_permission(self):
+        return super().has_permission() or self.get_object().user == self.request.user
+
+
+class OrderUpdateView(PageTimerMixin,PermissionRequiredMixin, UpdateView):
+    model = Order
+    template_name = 'update.html'
+    form_class = OrderForm
+    extra_context = {'title':' Заказа'}
+
+    permission_required = 'webapp.change_order'
+    permission_denied_message = 'Доступ запрещен!'
+
+
+class OrderDeliverView(PermissionRequiredMixin, View):
+    permission_required = 'webapp.deliver_order'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def get(self, request, *args, **kwargs):
+        print(kwargs)
+        order_pk = kwargs.get('pk')
+        order = Order.objects.get(pk=order_pk)
+        order.status = ORDER_DELIVERED_STATUS
+        order.save()
+        return HttpResponseRedirect(reverse('webapp:order_detail', kwargs={"pk": order_pk}))
+
+
+class OrderCancelView(PermissionRequiredMixin, View):
+    permission_required = 'webapp.cancel_order'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def get(self, request, *args, **kwargs):
+        order_pk = kwargs.get('pk')
+        order = Order.objects.get(pk=order_pk)
+        order.status = ORDER_CANCELLED_STATUS
+        order.save()
+        return HttpResponseRedirect(reverse('webapp:order_detail', kwargs={"pk": order_pk}))
+
+
+class OrderProductCreateView(PermissionRequiredMixin, CreateView):
+    model = OrderProduct
+    form_class = OrderProductForm
+    template_name = 'create.html'
+    permission_required = 'webapp.add_orderproduct'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def form_valid(self, form):
+        order = self.get_order()
+        self.object = form.save(commit=False)
+        self.object.order = order
+
+        return super().form_valid(form)
+
+    def get_order(self):
+        return Order.objects.get(pk=self.kwargs.get('order_pk'))
+
+    def get_success_url(self):
+        return reverse('webapp:order_detail', kwargs={'pk': self.get_order().pk})
+
+
+class OrderProductUpdateView(PermissionRequiredMixin, UpdateView):
+    model = OrderProduct
+    form_class = OrderProductForm
+    template_name = 'update.html'
+    permission_required = 'webapp.change_orderproduct'
+    permission_denied_message = 'Доступ запрещен!'
+
+
+    def get_success_url(self):
+        return reverse('webapp:order_detail', kwargs={'pk': self.get_order().pk})
+
+    def get_order(self):
+        return Order.objects.get(pk=self.kwargs.get('order_pk'))
+
+
+class OrderProductDeleteView(PermissionRequiredMixin, DeleteView):
+    model = OrderProduct
+    template_name = 'delete.html'
+    permission_required = 'webapp.delete_orderproduct'
+    permission_denied_message = 'Доступ запрещен!'
+
+    def get_success_url(self):
+        return reverse('webapp:order_detail', kwargs={'pk': self.get_order().pk})
+
+    def get_order(self):
+        return Order.objects.get(pk=self.kwargs.get('order_pk'))

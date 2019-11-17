@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Добавить {{ title }}{% endblock %}
+{% block content %}
+    <h1 class="text-center">Создать {{title}}</h1>
+    <form  method="POST" enctype="multipart/form-data">
+        {% include 'partial/form.html' with button_text='Создать' %}
+
+    </form>
+{% endblock %}

@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
+{% block menu %}
+    <li class="nav-item"><a href="{% url 'webapp:order_cancel' order.pk %}" class="nav-link">Отменить заказ</a></li>
+    <li class="nav-item"><a href="{% url 'webapp:order_deliver' order.pk %}" class="nav-link">Доставить заказ</a></li>
+{% endblock %}
 {% block content %}
     <h2 class="text-center">Заказ №{{ order.pk }}</h2>
         <div class="row my-3">
         <div class="col-6">Заказал :</div>
         <div class="col-6">{{ order.first_name }}</div>
+        </div>
+    <div class="row my-3">
+        <div class="col-6">Статус заказа :</div>
+        <div class="col-6">{{ order.get_status_display }}</div>
         </div>
     <div class="row my-3">
         <div class="col-6">Почта :</div>
@@ -14,17 +22,40 @@
         <div class="col-6">{{ order.phone }}</div>
         </div>
     <h2 class="text-center">Купленные товары</h2>
-        <div class="row my-3">
-            <div class="col-6"><b>Название</b></div>
-            <div class="col-6"><b>Количество</b></div>
-        </div>
-   {%  for product in order.orderproduct_set.all %}
-       <div class="row">
-       <div class="col-6">{{ product.product.name }}</div>
-       <div class="col-6">{{ product.amount }}</div>
-       </div>
-    {% endfor %}
 
+
+        <table class="table table-striped">
+           <thead>
+               <tr>
+                   <th scope="col">Товар</th>
+                   <th scope="col">Цена</th>
+                   <th scope="col">Количество</th>
+                   <th scope="col">Общая сумма</th>
+           </tr>
+           </thead>
+       <tbody>
+           {% for orderproduct in order.orderproduct_set.all%}
+               <tr>
+                   <td><a href="{% url 'webapp:product_detail' orderproduct.product.pk %}">{{ orderproduct.product.name }}</a></td>
+                   <td>{{ orderproduct.product.price }}</td>
+                   <td>{{ orderproduct.amount }}</td>
+                   <td>{{ orderproduct.total }}</td>
+                   <td><a href="{% url 'webapp:order_product_update' order.pk orderproduct.pk %}">Изменить</a></td>
+                    <td><a href="{% url 'webapp:order_product_delete' order.pk orderproduct.pk %}">Удалить</a></td>
+               </tr>
+           {% endfor %}
+       </tbody>
+       <tfoot>
+           <tr>
+               <th colspan="3">Итого:</th>
+               <td colspan="3">{{ order.total }}</td>
+           </tr>
+       </tfoot>
+   </table>
+
+        <div class="text-center my-4">
+            <a href="{% url 'webapp:order_product_add' order.pk %}" class="btn btn-primary">Добавить товар</a>
+        </div>
         <div class="row">
             <p>Заказ сделан: {{ order.created_at|date:"Y-m-d H:i:s" }}</p>
         </div>

@@ -29,8 +29,13 @@ ORDER_STATUS_CHOICES = (
    ('new', 'Новый'),
    ('payed', 'Оплачен'),
    ('processing', 'Обработка'),
-   ('delivered', 'Доставлен')
+   ('delivered', 'Доставлен'),
+   ('cancelled', 'Отменён')
 )
+
+ORDER_NEW_STATUS = ORDER_STATUS_CHOICES[0][0]
+ORDER_CANCELLED_STATUS = ORDER_STATUS_CHOICES[4][0]
+ORDER_DELIVERED_STATUS = ORDER_STATUS_CHOICES[3][0]
 
 
 class Order(models.Model):
@@ -50,6 +55,13 @@ class Order(models.Model):
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
+        permissions = [
+            ("cancel_order", "Может отменить заказ"),
+            ("deliver_order", "Может доставить заказ"),
+        ]
+
+    def total(self):
+        return sum([orderproduct.total() for orderproduct in self.orderproduct_set.all()])
 
 
 class OrderProduct(models.Model):
@@ -63,3 +75,6 @@ class OrderProduct(models.Model):
     class Meta:
         verbose_name = 'Товар в заказе'
         verbose_name_plural = 'Товары в заказах'
+
+    def total(self):
+        return self.product.price*self.amount
