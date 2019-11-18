@@ -130,9 +130,51 @@
     "last_name": "Yay",
     "email": "aaew@mail.ru",
     "phone": "21",
-    "status": "cancelled",
+    "status": "delivered",
     "created_at": "2019-11-17T16:37:47.680Z",
-    "updated_at": "2019-11-17T17:06:37.512Z"
+    "updated_at": "2019-11-18T05:20:45.514Z"
+  }
+},
+{
+  "model": "webapp.order",
+  "pk": 8,
+  "fields": {
+    "user": null,
+    "first_name": "\u041a\u0443\u0442\u043c\u0430\u043d",
+    "last_name": "\u041c\u0430\u0439\u0440\u0430\u043c\u0431\u0435\u043a \u0443\u0443\u043b\u0443",
+    "email": "asda@mail.ru",
+    "phone": "+996700614223",
+    "status": "new",
+    "created_at": "2019-11-18T05:37:21.744Z",
+    "updated_at": "2019-11-18T05:37:21.744Z"
+  }
+},
+{
+  "model": "webapp.order",
+  "pk": 9,
+  "fields": {
+    "user": 2,
+    "first_name": "\u041a\u0443\u0442\u043c\u0430\u043d",
+    "last_name": "\u041c\u0430\u0439\u0440\u0430\u043c\u0431\u0435\u043a \u0443\u0443\u043b\u0443",
+    "email": "mike@gmail.com",
+    "phone": "+996700614223",
+    "status": "cancelled",
+    "created_at": "2019-11-18T05:37:54.201Z",
+    "updated_at": "2019-11-18T05:38:08.223Z"
+  }
+},
+{
+  "model": "webapp.order",
+  "pk": 10,
+  "fields": {
+    "user": 2,
+    "first_name": "\u041a\u0443\u0442\u043c\u0430\u043d",
+    "last_name": "Yay",
+    "email": "1704.01007@manas.edu.kg",
+    "phone": "0-966-52-34-55",
+    "status": "new",
+    "created_at": "2019-11-18T05:41:37.551Z",
+    "updated_at": "2019-11-18T05:41:37.864Z"
   }
 },
 {
@@ -214,6 +256,51 @@
     "order": 4,
     "product": 4,
     "amount": "555.00"
+  }
+},
+{
+  "model": "webapp.orderproduct",
+  "pk": 12,
+  "fields": {
+    "order": 5,
+    "product": 2,
+    "amount": "5.00"
+  }
+},
+{
+  "model": "webapp.orderproduct",
+  "pk": 18,
+  "fields": {
+    "order": 8,
+    "product": 4,
+    "amount": "1.00"
+  }
+},
+{
+  "model": "webapp.orderproduct",
+  "pk": 19,
+  "fields": {
+    "order": 8,
+    "product": 6,
+    "amount": "1.00"
+  }
+},
+{
+  "model": "webapp.orderproduct",
+  "pk": 20,
+  "fields": {
+    "order": 9,
+    "product": 2,
+    "amount": "5.00"
+  }
+},
+{
+  "model": "webapp.orderproduct",
+  "pk": 21,
+  "fields": {
+    "order": 10,
+    "product": 2,
+    "amount": "2.00"
   }
 }
 ]
