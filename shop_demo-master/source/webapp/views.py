@@ -144,6 +144,9 @@ class BasketView(PageTimerMixin, CreateView):
         response = super().form_valid(form)
         self._save_order_products()
         self._clean_basket()
+        if self.request.user.is_authenticated:
+            self.object.user = self.request.user
+            self.object.save()
         return response
 
     def _prepare_basket(self):
@@ -190,7 +193,7 @@ class OrderListView(PageTimerMixin, LoginRequiredMixin, ListView):
         if self.request.user.has_perm('webapp.view_order'):
             return Order.objects.all().order_by('-created_at')
         else:
-            return self.request.user.orders.all()
+            return self.request.user.orders.all().order_by('-created_at')
 
 
 class OrderCreateView(PermissionRequiredMixin, CreateView):
@@ -214,6 +217,17 @@ class OrderDetailView(PageTimerMixin, PermissionRequiredMixin, DetailView):
     def has_permission(self):
         return super().has_permission() or self.get_object().user == self.request.user
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['can_change_or_cancel'] =  self.can_change_or_edit(self.request.user)
+        return context
+
+    def can_change_or_edit(self, user):
+        return user.has_perm('webapp.change_order') or self.is_creator_of_new_order(user)
+
+    def is_creator_of_new_order(self,user):
+        order = self.get_object()
+        return order.user == user and order.status == ORDER_NEW_STATUS
 
 class OrderUpdateView(PageTimerMixin,PermissionRequiredMixin, UpdateView):
     model = Order
@@ -223,6 +237,16 @@ class OrderUpdateView(PageTimerMixin,PermissionRequiredMixin, UpdateView):
 
     permission_required = 'webapp.change_order'
     permission_denied_message = 'Доступ запрещен!'
+
+    def has_permission(self):
+        return super().has_permission() or self.is_creator_of_new_order(self.request.user)
+
+    def is_creator_of_new_order(self,user):
+        order = self.get_object()
+        return order.user == user and order.status == ORDER_NEW_STATUS
+
+    def get_success_url(self):
+        return reverse('webapp:order_detail', kwargs={'pk': self.object.pk})
 
 
 class OrderDeliverView(PermissionRequiredMixin, View):
@@ -241,6 +265,13 @@ class OrderDeliverView(PermissionRequiredMixin, View):
 class OrderCancelView(PermissionRequiredMixin, View):
     permission_required = 'webapp.cancel_order'
     permission_denied_message = 'Доступ запрещен!'
+
+    def has_permission(self):
+        return super().has_permission() or self.is_creator_of_new_order(self.request.user)
+
+    def is_creator_of_new_order(self,user):
+        order = Order.objects.get(pk=self.kwargs.get('pk'))
+        return order.user == user and order.status == ORDER_NEW_STATUS
 
     def get(self, request, *args, **kwargs):
         order_pk = kwargs.get('pk')

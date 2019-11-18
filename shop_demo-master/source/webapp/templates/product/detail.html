@@ -1,5 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.name }}{% endblock %}
+{% block menu %}
+    {% if perms.webapp.change_product %}
+    <li class="nav-item"><a href="{% url 'webapp:product_update' product.pk %}" class="nav-link">Изменить товар</a></li>
+    {% endif %}
+    {% if perms.webapp.delete_product %}
+    <li class="nav-item"><a href="{% url 'webapp:product_delete' product.pk %}" class="nav-link">Удалить товар</a></li>
+    {% endif %}
+{% endblock %}
 {% block content %}
     <div class="text-center">
         <h1>{{ product.name }}</h1>

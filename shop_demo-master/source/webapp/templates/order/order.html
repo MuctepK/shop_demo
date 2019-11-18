@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 {% block menu %}
+    {% if can_change_or_cancel %}
+    <li class="nav-item"><a href="{% url 'webapp:order_update' order.pk %}" class="nav-link">Изменить заказ</a></li>
     <li class="nav-item"><a href="{% url 'webapp:order_cancel' order.pk %}" class="nav-link">Отменить заказ</a></li>
+    {% endif %}
+    {% if perms.webapp.deliver_order %}
     <li class="nav-item"><a href="{% url 'webapp:order_deliver' order.pk %}" class="nav-link">Доставить заказ</a></li>
+    {% endif %}
 {% endblock %}
 {% block content %}
     <h2 class="text-center">Заказ №{{ order.pk }}</h2>
@@ -40,8 +45,12 @@
                    <td>{{ orderproduct.product.price }}</td>
                    <td>{{ orderproduct.amount }}</td>
                    <td>{{ orderproduct.total }}</td>
+                   {% if perms.webapp.change_orderproduct %}
                    <td><a href="{% url 'webapp:order_product_update' order.pk orderproduct.pk %}">Изменить</a></td>
-                    <td><a href="{% url 'webapp:order_product_delete' order.pk orderproduct.pk %}">Удалить</a></td>
+                   {% endif %}
+                   {% if perms.webapp.delete_orderproduct %}
+                   <td><a href="{% url 'webapp:order_product_delete' order.pk orderproduct.pk %}">Удалить</a></td>
+                    {% endif %}
                </tr>
            {% endfor %}
        </tbody>
@@ -52,10 +61,11 @@
            </tr>
        </tfoot>
    </table>
-
+    {% if perms.webapp.add_orderproduct %}
         <div class="text-center my-4">
             <a href="{% url 'webapp:order_product_add' order.pk %}" class="btn btn-primary">Добавить товар</a>
         </div>
+    {% endif %}
         <div class="row">
             <p>Заказ сделан: {{ order.created_at|date:"Y-m-d H:i:s" }}</p>
         </div>

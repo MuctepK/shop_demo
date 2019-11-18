@@ -1,19 +1,25 @@
 {% extends 'base.html' %}
 {% block menu %}
-
+    {% if perms.webapp.add_order %}
     <li class="nav-item"><a href="{% url 'webapp:order_create' %}" class="nav-link">Добавить заказ</a></li>
+    {% endif %}
 {% endblock %}
 {% block content %}
+    <h2>Список заказов</h2>
     {% for order in object_list %}
         <div class="order my-5">
         <h2 class="text-center">Заказ <a href="{% url 'webapp:order_detail' order.pk %}">№{{ order.pk }}</a></h2>
         <div class="row my-3">
-        <div class="col-6">Заказал :</div>
+        <div class="col-6">Имя заказчика :</div>
         <div class="col-6">{{ order.first_name }}</div>
         </div>
         <div class="row my-3">
+        <div class="col-6">Логин заказчика :</div>
+        <div class="col-6">{{ order.user|default:"Не указан" }}</div>
+        </div>
+        <div class="row my-3">
         <div class="col-6">Статус заказа :</div>
-        <div class="col-6">{{ order.get_status_display }}</div>
+            <div class="col-6"><b>{{ order.get_status_display }}</b></div>
         </div>
         <h2 class="text-center">Купленные товары</h2>
         <table class="table table-striped">
@@ -32,8 +38,12 @@
                    <td>{{ orderproduct.product.price }}</td>
                    <td>{{ orderproduct.amount }}</td>
                    <td>{{ orderproduct.total }}</td>
+                   {% if perms.webapp.change_orderproduct %}
                    <td><a href="{% url 'webapp:order_product_update' order.pk orderproduct.pk %}">Изменить</a></td>
-                    <td><a href="{% url 'webapp:order_product_delete' order.pk orderproduct.pk %}">Удалить</a></td>
+                   {% endif %}
+                   {% if perms.webapp.delete_orderproduct %}
+                   <td><a href="{% url 'webapp:order_product_delete' order.pk orderproduct.pk %}">Удалить</a></td>
+                    {% endif %}
                </tr>
            {% endfor %}
        </tbody>
@@ -49,10 +59,21 @@
         </div>
         <div class="row">
             <div class="col-6 text-center">
+                {% if perms.webapp.cancel_order or order.status == 'new' and order.user == request.user %}
                 <a href="{% url 'webapp:order_cancel' order.pk %}" class="btn btn-danger">Отменить заказ</a>
+                {% endif %}
+                {% if perms.webapp.change_order or order.status == 'new' and order.user == request.user%}
+                    <a href="{% url 'webapp:order_update' order.pk %}" class="btn btn-info mr-5">Изменить заказ</a>
+                {% endif %}
+                {% if perms.webapp.deliver_order %}
                 <a href="{% url 'webapp:order_deliver' order.pk %}" class="btn btn-warning">Доставить заказ</a>
+                {% endif %}
             </div>
         </div>
         </div>
+        {% empty %}
+        <h3 class="mt-5">
+        Вы еще не сделали ни один заказ...
+        </h3>
     {% endfor %}
 {% endblock %}

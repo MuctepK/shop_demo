@@ -12,7 +12,7 @@ class ProductForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        exclude = ['created_at', 'updated_at']
+        exclude = ['created_at', 'updated_at', 'products', 'status', 'user']
 
 
 class OrderProductForm(forms.ModelForm):
